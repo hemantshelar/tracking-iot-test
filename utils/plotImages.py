@@ -20,8 +20,13 @@ def showImages(columns):
 				break;
 			subPlotArgs = f'{rows}{columns}{index}'
 			plot.subplot(subPlotArgs)
-			img = cv2.cvtColor(imageList[index-1],cv2.COLOR_BGR2RGB)
-			plot.imshow(img)
+			#img = cv2.cvtColor(imageList[index-1],cv2.COLOR_BGR2RGB)
+			img = imageList[index-1]
+			length = len(img.shape);
+			plot.imshow(img,cmap='gray')
+
 			index = index + 1
 	
 	plot.show();
+def clear():
+	imageList.clear();
