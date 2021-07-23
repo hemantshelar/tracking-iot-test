@@ -7,14 +7,18 @@ import numpy as np
 from matplotlib import cm
 
 
+def FindCounters(img):
+	c,h= cv2.findContours(img,cv2.RETR_LIST,cv2.CHAIN_APPROX_NONE)
+	return c;
+
 def mouseCallBack(event,x,y,flags,param):
-	print('mouse down')
+	#print('mouse down')
 	global marks_updated
 	if event == cv2.EVENT_RBUTTONDBLCLK:
 		mouseClicked = True;
 	if event == cv2.EVENT_LBUTTONDOWN:
 		#MARKERS PASSED TO THE WATERHED ALGO
-		cv2.circle(marker_image,(x,y),10,(current_marker),-1)
+		cv2.circle(marker_image,(x,y),10,current_marker,-1)
 		cv2.circle(road_copy,(x,y),10,colors[current_marker],-1)
 		marks_updated = True
 
@@ -28,12 +32,12 @@ def Create_Rgb(index):
 	return x;
 
 
-road = cv2.imread('./imgs/water-bucket.jpg')
+#road = cv2.imread('./imgs/water-bucket.jpg')
 road = cv2.imread('./imgs/tomato-bucket.jpg')
-road = cv2.imread('./imgs/tomato-bucket-1.jpg')
-road = cv2.imread('./imgs/soil-1.jpg');
-road = cv2.imread('./imgs/banana-bucket-1.jpg');
-road = cv2.imread('./imgs/green-apples-1.jpg');
+#road = cv2.imread('./imgs/tomato-bucket-1.jpg')
+#road = cv2.imread('./imgs/soil-1.jpg');
+#road = cv2.imread('./imgs/banana-bucket-1.jpg');
+#road = cv2.imread('./imgs/green-apples-1.jpg');
 #road = cv2.resize(road,(0,0),None,1/5,1/5)
 road_copy = road.copy();
 
@@ -73,18 +77,37 @@ while True:
 		segments = np.zeros(road.shape,np.uint8)
 		
 		for color_ind in range(n_markders):
-			segments[marker_image_copy==(color_ind)] = colors[color_ind]
+			segments[marker_image_copy== color_ind] = colors[color_ind]
 
 
+cv2.destroyAllWindows();
 
+segments[segments == colors[1]] = 0
+segments[segments != 0] = 255
+#segments[marker_image_copy != colors[1]] = 0
+
+gray = cv2.cvtColor(segments,cv2.COLOR_BGR2GRAY);
+ret,thresh1 = cv2.threshold(gray,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+
+kernal = np.ones((3,3),np.uint8)
+dil = cv2.dilate(thresh1,kernel=kernal,iterations=2)
+
+
+result = FindCounters(dil);
+print(len(result));
+cv2.drawContours(road,result,None,(0,255,255),4)
+
+cv2.imshow('xxx',road);
+
+
+while True:
+	if cv2.waitKey(5) & 0xFF == ord('q'):
+		break;
 
 #pltHelper.addImage(road_copy)
 #pltHelper.addImage(marker_image)
 #pltHelper.addImage(segments)
 #pltHelper.showImages(2)
-
-
-
 
 
 cv2.destroyAllWindows();
