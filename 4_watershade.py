@@ -99,10 +99,7 @@ cv2.drawContours(road,result,None,(0,255,255),4)
 
 cv2.imshow('xxx',road);
 
-
-while True:
-	if cv2.waitKey(5) & 0xFF == ord('q'):
-		break;
+cv2.waitKey() ;
 
 #pltHelper.addImage(road_copy)
 #pltHelper.addImage(marker_image)
