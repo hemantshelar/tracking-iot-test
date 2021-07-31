@@ -30,15 +30,39 @@ def Create_Rgb(index):
 	x = tuple(x)
 	return x
 
+def FindRegion(segments,colorIndexId):
+	global colors
+	segCopy = segments.copy()
+	segCopy[segCopy == colors[colorIndexId]] = 0
+	segCopy[segCopy != 0] = 255
 
-#original = cv2.imread('./imgs/water-bucket.jpg')
+	gray = cv2.cvtColor(segCopy,cv2.COLOR_BGR2GRAY);
+	ret,thresh1 = cv2.threshold(gray,0,255,cv2.THRESH_OTSU + cv2.THRESH_BINARY)
+
+	kernal = np.ones((5,5),np.uint8)
+	erd = cv2.erode(thresh1,kernel=kernal)
+	dil = cv2.dilate(erd,kernel=kernal,iterations=2)
+	caption = f'color - {colorIndexId}'
+	cv2.imshow(caption,dil)
+	cv2.waitKey()
+	result = FindCounters(dil)
+	print(f'{caption} - {len(result)}');
+	return result
+
+
 original = cv2.imread('./imgs/tomato-bucket.jpg')
-#original = cv2.imread('./imgs/tomato-bucket-1.jpg')
+#original = cv2.imread('./imgs/apples-tray-1.jpg')
+
+#original = cv2.resize(original,(0,0),None,1/5,1/5)
+#original = cv2.imread('./imgs/water-bucket.jpg')
+
+#Not perfect
+#original = cv2.imread('./imgs/water-bucket-1.jpg')
 #original = cv2.imread('./imgs/soil-1.jpg');
+#original = cv2.imread('./imgs/tomato-bucket-1.jpg')
 #original = cv2.imread('./imgs/banana-bucket-1.jpg');
 #original = cv2.imread('./imgs/green-apples-1.jpg');
-#original = cv2.resize(original,(0,0),None,1/5,1/5)
-original_copy = original.copy();
+original_copy = original.copy()
 
 marker_image = np.zeros(original.shape[:2],np.int32)
 segments = np.zeros(original.shape,np.uint8)
@@ -46,7 +70,7 @@ segments = np.zeros(original.shape,np.uint8)
 colors = []
 
 for i in range(10):
-	colors.append(Create_Rgb(i));
+	colors.append(Create_Rgb(i))
 
 # GLOBAL VARIABLES
 nTotalMarkers = 10
@@ -69,6 +93,7 @@ while True:
 		segments = np.zeros(original.shape,np.uint8)
 	elif keyPressed > 0 and chr(keyPressed).isdigit():
 		current_marker = int(chr(keyPressed))
+		print(current_marker)
 	
 	if marks_updated:
 		marker_image_copy = marker_image.copy()
@@ -80,41 +105,21 @@ while True:
 
 cv2.destroyAllWindows()
 
-segments[segments == colors[1]] = 0
-segments[segments != 0] = 255
-#segments[marker_image_copy != colors[1]] = 0
+produceContours = FindRegion(segments,1)
+bucketContours = FindRegion(segments,2)
+backGroundContours = FindRegion(segments,3)
 
-gray = cv2.cvtColor(segments,cv2.COLOR_BGR2GRAY);
-ret,thresh1 = cv2.threshold(gray,0,255,cv2.THRESH_OTSU + cv2.THRESH_BINARY)
+cv2.drawContours(original,produceContours,None,(0,255,255),2)
+cv2.drawContours(original,bucketContours,None,(0,0,255),3)
+cv2.drawContours(original,backGroundContours,None,(255,0,0),4)
 
-kernal = np.ones((5,5),np.uint8)
-erd = cv2.erode(thresh1,kernel=kernal)
-dil = cv2.dilate(erd,kernel=kernal,iterations=2)
+cv2.imshow('Final Result',original)
 
-cv2.imshow('Dilated Image',dil)
-
-result = FindCounters(dil);
-
-
-for cnt in result:
-	area = cv2.contourArea(cnt)
-	if area < 10000:
-		cv2.drawContours(original,[cnt],None,(0,255,255),3)
-	else:
-		cv2.drawContours(original,[cnt],None,(0,0,255),3)
-
-		
-
-#cv2.drawContours(original,result,None,(0,255,255),4)
-
-msg = f'{len(result)}'
-cv2.imshow(msg,original);
-
-pltHelper.addImage(original_copy)
+#pltHelper.addImage(original_copy)
 #pltHelper.addImage(marker_image)
 #pltHelper.addImage(segments)
-pltHelper.showImages(2)
+#pltHelper.showImages(2)
 
 cv2.waitKey()
 
-cv2.destroyAllWindows();
+cv2.destroyAllWindows()
